@@ -288,7 +288,7 @@ function courseHTML(c,opts){
     (c.room?'<span>📍 '+esc(c.room)+'</span>':'')+
     (c.teacher?'<span>👤 '+esc(c.teacher)+'</span>':'')+
     (pill?('<span>'+pill+'</span>'):'');
-  return '<div class="course'+(st==='done'?' done':'')+'" data-id="'+c.id+'">'+
+  return '<div class="course'+(st==='done'?' done':'')+(opts.dim?' dim':'')+'" data-id="'+c.id+'">'+
     '<div class="tm"><b>'+esc(cStart(c))+'</b>'+esc(cEnd(c))+'</div>'+
     '<div class="bd"><div class="nm">'+esc(c.name)+'</div>'+
       '<div class="mt">'+meta+'</div></div></div>';
@@ -391,15 +391,16 @@ function normText(s){
     .replace(/\s+/g,'');
 }
 function dayFromText(t){
-  const m=t.match(/(?:礼拜|星期|周)([一二三四五六日天1-7])/);
+  const m=t.match(/(下|本|这|上)?(?:礼拜|星期|周)([一二三四五六日天1-7])/);
   if(m){
-    const s=m[1];
+    const s=m[2];
     const map={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':7,'天':7};
-    return {day: map[s]||Number(s), scope:'week'};
+    const scope = m[1]==='下' ? 'nextweek' : (m[1]==='上' ? 'lastweek' : 'week');
+    return {day: map[s]||Number(s), scope};
   }
-  if(/今天|今日|今晚/.test(t))return {day:todayIdx(),scope:'day'};
-  if(/明天|明日/.test(t))return {day:todayIdx()===7?1:todayIdx()+1,scope:'day'};
-  if(/后天/.test(t))return {day:(todayIdx()+1)%7+1,scope:'day'};
+  if(/今天|今日|今晚/.test(t))return {day:todayIdx(),scope:'day',date:new Date()};
+  if(/明天|明日/.test(t)){const x=new Date();x.setDate(x.getDate()+1);return {day:x.getDay()||7,scope:'day',date:x};}
+  if(/后天/.test(t)){const x=new Date();x.setDate(x.getDate()+2);return {day:x.getDay()||7,scope:'day',date:x};}
   if(/本周|这周|这个星期|本星期/.test(t))return {scope:'thisweek'};
   if(/下周|下个星期/.test(t))return {scope:'nextweek'};
   return null;
@@ -435,6 +436,10 @@ function queryCourses(text){
   if(!/[a-zA-Z\u4e00-\u9fa5]/.test(kw))kw='';
   let list=courses.slice();
   if(d&&d.day){list=list.filter(c=>c.day===d.day);}
+  if(d&&d.scope==='day'&&d.date){const w=weekOf(d.date);list=list.filter(c=>activeIn(c,w));}
+  if(d&&d.scope==='thisweek'){const w=curWeek();list=list.filter(c=>activeIn(c,w));}
+  if(d&&d.scope==='nextweek'){const w=curWeek()+1;list=list.filter(c=>activeIn(c,w));}
+  if(d&&d.scope==='lastweek'){const w=curWeek()-1;list=list.filter(c=>activeIn(c,w));}
   if(pr){list=list.filter(c=>!(c.p1<pr[0]||c.p0>pr[1]));}
   if(kw&&kw.length>=1){
     const hit=list.filter(c=>(c.name+c.teacher+c.room).indexOf(kw)>=0);
@@ -460,9 +465,11 @@ function renderQuery(text){
   }
   const dayLabel = day&&day.day ? WD[day.day] : (day&&day.scope==='thisweek'?'本周':'');
   const head='<div class="dayh"><b>'+esc(dayLabel||'共 '+list.length+' 门课')+'</b><span>'+(dayLabel?list.length+' 门':'')+'</span></div>';
+  const wk=curWeek();
+  const dimByWeek = !(day&&(day.scope==='nextweek'||day.scope==='lastweek'||day.scope==='day'));
   const sorted=list.slice().sort((a,b)=>a.day-b.day||a.p0-b.p0);
-  out.innerHTML=head+sorted.map(c=>courseHTML(c,{status:(day&&day.day===todayIdx())?statusOf(c):null})).join('')+
-    '<div class="hint">找到 '+list.length+' 门课'+(kw?('，关键词「'+esc(kw)+'」'):'')+'</div>';
+  out.innerHTML=head+sorted.map(c=>courseHTML(c,{status:(day&&day.day===todayIdx()&&activeIn(c,wk))?statusOf(c):null,dim:dimByWeek&&!activeIn(c,wk)})).join('')+
+    '<div class="hint">找到 '+list.length+' 门课'+(kw?('，关键词「'+esc(kw)+'」'):'')+(dimByWeek?'（半透明 = 本周不上）':'')+'</div>';
 }
 
 /* ---------- 主题 ---------- */
