@@ -3,6 +3,7 @@
 一个**不用登录、不联网、不收集数据**的课表小工具。所有课程只存在你自己手机/电脑的浏览器里。
 
 线上地址：<https://aknyl.github.io/kebiao/pub/>
+使用说明：<https://aknyl.github.io/kebiao/pub/help.html>
 
 ## 怎么用
 
