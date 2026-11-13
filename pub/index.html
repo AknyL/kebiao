@@ -196,7 +196,7 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
     <div class="card">
       <h3><span class="dot"></span>自己导入课表</h3>
       <div class="f"><label>粘贴课表文字 / 表格 / 钉钉上课链接</label>
-        <textarea id="impText" class="importarea" placeholder="每行一门课，例如：&#10;周一 第1-2节 系统解剖学 荣鸣歌 1201&#10;周三 10:10-11:35 英语（1） 周阿芹 https://h5.dingtalk.com/..."></textarea>
+        <textarea id="impText" class="importarea" placeholder="每行一门课，例如：&#10;周一 第1-2节 高等数学 张三 A101&#10;周三 10:10-11:35 大学英语 李四 2416 https://h5.dingtalk.com/..."></textarea>
       </div>
       <div class="actions">
         <button class="btn ghost" id="impFileBtn">选文件（.txt/.csv/.json）</button>
@@ -552,7 +552,7 @@ function openEdit(c){
   const perOpts=(sel)=>PLIST.map(p=>'<option value="'+p+'"'+(p===sel?' selected':'')+'>第'+p+'节 '+pStart(p)+'</option>').join('');
   $('#sheet').innerHTML=
     '<h3>'+(isNew?'添加课程':'编辑课程')+'</h3>'+
-    '<div class="f"><label>课程名</label><input id="eName" type="text" value="'+esc(c.name)+'" placeholder="例如 系统解剖学"></div>'+
+    '<div class="f"><label>课程名</label><input id="eName" type="text" value="'+esc(c.name)+'" placeholder="例如 高等数学"></div>'+
     '<div class="f"><label>星期</label><select id="eDay">'+[1,2,3,4,5,6,7].map(d=>'<option value="'+d+'"'+(d===c.day?' selected':'')+'>'+WD[d]+'</option>').join('')+'</select></div>'+
     '<div class="row2"><div class="f"><label>开始节</label><select id="eP0">'+perOpts(c.p0)+'</select></div>'+
     '<div class="f"><label>结束节</label><select id="eP1">'+perOpts(c.p1)+'</select></div></div>'+
