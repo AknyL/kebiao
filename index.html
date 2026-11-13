@@ -165,7 +165,14 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
     <div class="card">
       <h3><span class="dot"></span>上课时间表</h3>
       <div id="bellTable"></div>
-      <div class="hint">按你们学校作息排的（第1节 8:45，每节 45 分钟）。如果不对，直接改课程时间也行。</div>
+      <div class="hint">按你们学校作息排的（第1节 8:30，白天每节 40 分钟，晚上每节 20 分钟）。如果不对，直接改课程时间也行。</div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>分享给同学（对方不用登录）</h3>
+      <div class="hint" style="text-align:left">把这份课表打包成一条链接／分享码，同学打开或粘贴就能直接用，<b>不需要登录教务系统</b>。</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn" id="btnShare">🔗 生成分享链接</button>
+      </div>
     </div>
     <div class="card">
       <h3><span class="dot"></span>备份 / 提醒</h3>
@@ -198,6 +205,12 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
       <input type="file" id="impFile" accept=".txt,.csv,.tsv,.json,text/plain,application/json" class="hidden">
       <div id="impPrev"></div>
       <div class="hint" style="text-align:left">能认：<b>周一 / 星期三</b>、<b>第3节 / 3-5节</b>、<b>10:10-11:35</b>、<b>第3-16周</b>；行内<b>钉钉/直播链接</b>自动挂到这门课。同名同天的课只补链接，不会重复添加。</div>
+      <div class="f" style="margin-top:14px"><label>或者：粘贴同学发来的分享码</label>
+        <input id="impCode" type="text" placeholder="粘贴分享码或分享链接">
+      </div>
+      <div class="actions">
+        <button class="btn" id="impCodeBtn">用分享码导入</button>
+      </div>
       <div class="actions" style="margin-top:12px">
         <button class="btn" id="impMerge">追加</button>
         <button class="btn ghost" id="impReplace">覆盖全部</button>
@@ -869,7 +882,133 @@ function initEvents(){
     if(!confirm('恢复成最初的课表？当前修改会丢失'))return;
     courses=JSON.parse(JSON.stringify(DEFAULT));save();renderAll();renderToday();renderWeek();toast('已恢复默认课表');
   };
+  $('#btnShare').onclick=openShare;
+  $('#impCodeBtn').onclick=()=>{
+    const v=$('#impCode').value.trim();
+    if(!v){toast('先把分享码粘进来');return;}
+    applyShareCode(v,'merge');
+  };
   $('#modal').onclick=e=>{if(e.target.id==='modal')closeModal();};
+}
+
+/* ---------- 分享（同学不用登录） ---------- */
+function encWeeks(c){
+  const w=(c.weeks||[]).slice().sort((a,b)=>a-b);
+  if(!w.length)return '';
+  const runs=[];
+  for(const n of w){const l=runs[runs.length-1];if(l&&n===l[1]+1)l[1]=n;else runs.push([n,n]);}
+  return runs.map(r=>r[0]===r[1]?String(r[0]):r[0]+'-'+r[1]).join(',');
+}
+function b64u(bytes){
+  let s='';
+  for(let i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function unb64u(str){
+  const s=String(str).replace(/-/g,'+').replace(/_/g,'/');
+  const pad=s.length%4?('='.repeat(4-s.length%4)):'';
+  const bin=atob(s+pad);
+  const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+  return out;
+}
+function sharePayload(){
+  return courses.map(c=>{
+    const o={n:c.name,d:c.day,a:c.p0,b:c.p1};
+    const s=c.start||pStart(c.p0), e=c.end||pEnd(c.p1);
+    if(s&&s!==pStart(c.p0))o.s=s;
+    if(e&&e!==pEnd(c.p1))o.e=e;
+    if(c.room)o.r=c.room;
+    if(c.teacher)o.h=c.teacher;
+    const w=encWeeks(c); if(w)o.w=w;
+    if(c.link)o.l=c.link;
+    return o;
+  });
+}
+async function makeShareCode(){
+  const json=JSON.stringify(sharePayload());
+  let bytes;
+  if(typeof CompressionStream!=='undefined'){
+    try{
+      const buf=await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+      bytes=new Uint8Array(buf);
+    }catch(e){bytes=new TextEncoder().encode(json);}
+  }else bytes=new TextEncoder().encode(json);
+  return b64u(bytes);
+}
+async function readShareCode(code){
+  const raw=String(code||'').trim();
+  const m=raw.match(/[#?&]s=([A-Za-z0-9\-_]+)/);
+  const body=m?m[1]:raw.replace(/\s+/g,'');
+  if(!body)throw new Error('empty');
+  const bytes=unb64u(body);
+  let text='';
+  if(typeof DecompressionStream!=='undefined'){
+    try{
+      const buf=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+      text=new TextDecoder().decode(buf);
+    }catch(e){text=new TextDecoder().decode(bytes);}
+  }else text=new TextDecoder().decode(bytes);
+  const arr=JSON.parse(text);
+  if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
+  const stamp=Date.now();
+  return arr.map((x,i)=>({id:'s'+stamp+i,name:String(x.n||'课程'),day:Number(x.d)||1,p0:Number(x.a)||1,p1:Number(x.b)||Number(x.a)||1,
+    start:x.s||pStart(Number(x.a)||1),end:x.e||pEnd(Number(x.b)||Number(x.a)||1),
+    room:x.r||'',teacher:x.h||'',weeks:parseWeeks(String(x.w||'')),link:x.l||''}));
+}
+async function applyShareCode(code,mode){
+  let list;
+  try{list=await readShareCode(code);}
+  catch(e){toast('分享码不完整，重新复制一次');return;}
+  if(mode==='replace'){courses=list;}
+  else{
+    const key=c=>c.day+'|'+c.p0+'|'+c.name;
+    const seen=new Set(courses.map(key));
+    list.forEach(c=>{if(!seen.has(key(c))){courses.push(c);seen.add(key(c));}});
+  }
+  save();renderAll();renderToday();renderWeek();
+  toast('导入成功：共 '+courses.length+' 门课');
+  switchTab('today');
+}
+function copyText(t){
+  const fb=()=>{
+    const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');toast('已复制');}catch(e){toast('复制失败，长按手动选');}
+    ta.remove();
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast('已复制')).catch(fb);
+  }else fb();
+}
+async function openShare(){
+  const code=await makeShareCode();
+  const url=location.origin+location.pathname+'#s='+code;
+  $('#sheet').innerHTML=
+    '<h3>分享给同学</h3>'+
+    '<div class="hint" style="text-align:left">把这条链接发给他，他打开就会问要不要导入，<b>不用登录教务系统</b>。</div>'+
+    '<div class="f"><label>分享链接</label><textarea class="importarea" id="shUrl" readonly style="height:84px;font-size:11.5px"></textarea></div>'+
+    '<div class="f"><label>或者只发这段码</label><textarea class="importarea" id="shCode" readonly style="height:64px;font-size:11px"></textarea></div>'+
+    '<div class="actions"><button class="btn" id="shCopy">复制链接</button><button class="btn ghost" id="shCopyCode">复制码</button></div>'+
+    '<div class="actions" style="margin-top:8px"><button class="btn ghost" id="shClose">关闭</button></div>';
+  $('#modal').classList.remove('hidden');
+  $('#shUrl').value=url;$('#shCode').value=code;
+  $('#shClose').onclick=closeModal;
+  $('#shCopy').onclick=()=>copyText(url);
+  $('#shCopyCode').onclick=()=>copyText(code);
+}
+async function handleShareFromUrl(){
+  const m=(location.hash||'').match(/[#&]s=([A-Za-z0-9\-_]+)/)||(location.search||'').match(/[?&]s=([A-Za-z0-9\-_]+)/);
+  if(!m)return false;
+  let list;
+  try{list=await readShareCode(m[1]);}catch(e){return false;}
+  const ok=confirm('这是同学分享的课表（'+list.length+' 条）。\n\n点「确定」用它覆盖你现在的课表；点「取消」保留自己的。');
+  if(ok){
+    courses=list;save();renderAll();renderToday();renderWeek();
+    toast('已导入同学的课表，共 '+courses.length+' 门');
+  }
+  history.replaceState(null,'',location.pathname+location.search.replace(/[?&]s=[A-Za-z0-9\-_]+/,''));
+  return true;
 }
 
 /* ---------- 启动 ---------- */
@@ -880,6 +1019,7 @@ function boot(){
   renderToday();renderAll();renderWeek();
   initEvents();
   if(/[?&]import\b/.test(location.search)||/import/i.test(location.hash))switchTab('import');
+  handleShareFromUrl();
   setInterval(renderToday,30000);
 }
 boot();
