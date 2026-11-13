@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>使用说明 · 课表助手（公开版）</title>
+<meta name="theme-color" content="#4f6ef7">
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--fg:#1c2233;--sub:#6b7488;--line:#e6eaf3;--pri:#4f6ef7;--soft:#eef2ff;--warn:#fff6e6;--warnb:#f0b429}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding:0 0 40px}
+header{background:linear-gradient(135deg,#4f6ef7,#7a5cf0);color:#fff;padding:22px 18px 18px}
+header h1{margin:0;font-size:19px;letter-spacing:.3px}
+header p{margin:6px 0 0;font-size:13px;opacity:.9}
+.wrap{max-width:680px;margin:0 auto;padding:0 14px}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-top:14px;box-shadow:0 2px 10px rgba(28,34,51,.05)}
+h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--soft);color:var(--pri);font-size:12.5px;font-weight:700}
+h3{font-size:14px;margin:16px 0 6px}
+p{margin:8px 0}
+ol,ul{margin:8px 0;padding-left:22px}
+li{margin:5px 0}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:#f1f4fa;border-radius:5px;padding:1px 5px}
+pre{background:#f7f9fd;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;margin:10px 0}
+pre code{background:none;padding:0;font-size:12.8px;line-height:1.75}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:12.5px}
+.tip{background:var(--warn);border-left:3px solid var(--warnb);border-radius:8px;padding:10px 12px;font-size:13.5px;margin:10px 0}
+.tip b{color:#8a5a00}
+.muted{color:var(--sub);font-size:13px}
+.btn{display:inline-block;margin-top:14px;background:var(--pri);color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-size:14px}
+.tag{display:inline-block;background:var(--soft);color:var(--pri);border-radius:999px;padding:1px 9px;font-size:12px;margin-right:4px}
+footer{text-align:center;color:var(--sub);font-size:12px;margin-top:22px}
+</style>
+</head>
+<body>
+<header>
+  <h1>课表助手 · 使用说明</h1>
+  <p>免费 · 不用登录 · 课表只存在你自己的设备上</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2><span class="n">1</span>这是什么</h2>
+    <p>一个小网页，把课表贴进去，它就会告诉你<b>今天有什么课、下一节在哪上、什么时候下课</b>，上课前还能点链接直接进钉钉课堂。</p>
+    <p>没有账号、没有注册、没有服务器：课程只保存在你手机/电脑的浏览器里，换设备用「导出备份」搬家。</p>
+    <p class="muted">网址：<span class="mono">https://aknyl.github.io/kebiao/pub/</span></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>30 秒上手</h2>
+    <ol>
+      <li>打开上面的网址</li>
+      <li>点首页的<b>「导入课表」</b>（或底部「导入」标签）</li>
+      <li>把课表<b>整段粘贴</b>到输入框</li>
+      <li>点<b>「解析预览」</b>→ 看解析对不对 → 点<b>「追加」</b></li>
+    </ol>
+    <p class="muted">之后每次打开就是「今天」页，不用再导入。</p>
+    <a class="btn" href="./">去导入课表 →</a>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>课表从哪来</h2>
+
+    <h3>钉钉（最常见）</h3>
+    <p>钉钉里打开「课表」→ 右上角 → 选「复制全部」或直接长按选中课表文字复制 → 粘贴进来。如果课程后面带着上课链接，也会一起识别，之后每节课都能点「🔗 上课」直接进。</p>
+
+    <h3>教务系统网页</h3>
+    <p>在电脑上打开教务系统的课表页，用鼠标把整张表框选复制，直接粘进来即可（一行一门课最好）。</p>
+
+    <h3>Excel / 表格</h3>
+    <p>把表格复制进来，或者「选文件」上传 <span class="mono">.csv</span> / <span class="mono">.txt</span>。表格要有表头，含「课程名」这一列即可，另外认「星期 / 开始节 / 结束节 / 教室 / 老师 / 周次 / 链接」。</p>
+
+    <h3>什么都没有</h3>
+    <p>点「课程」页 →「+ 添加课程」，手动填。也可以用地址栏直达导入页：<span class="mono">/pub/?import</span></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span>认得的写法</h2>
+    <p>每行一门课，下面这些信息写不写都行，写了就自动认：</p>
+<pre><code>周一 第1-2节 高等数学 张三 A101
+星期三 10:10-11:35 大学英语 李四 2416 第3-16周
+周四 第3节 体育 操场 https://h5.dingtalk.com/xxx
+周五 第5-6节 大学物理 王五 实验楼302 3,5,7周</code></pre>
+    <table>
+      <tr><th>信息</th><th>写法</th></tr>
+      <tr><td>星期</td><td>周一 / 星期三 / 礼拜五</td></tr>
+      <tr><td>节次</td><td>第3节、3-5节、第1-2节</td></tr>
+      <tr><td>时间</td><td>10:10-11:35（有具体时间优先用时间）</td></tr>
+      <tr><td>周次</td><td>第3-16周、3,5,7周、单周/双周；不写 = 每周</td></tr>
+      <tr><td>教室</td><td>A101、1201、实验楼302、操场</td></tr>
+      <tr><td>老师</td><td>两个字到六个字的人名，或「张老师」</td></tr>
+      <tr><td>链接</td><td>行内任意 http(s) 地址，自动挂到这门课</td></tr>
+    </table>
+    <div class="tip"><b>提示：</b>课程名不认识时，它会按「教室编号 / 人名」把行尾拆成教室和老师；如果拆错了，导入后点课程改一下就行。</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span>平时怎么用</h2>
+    <table>
+      <tr><th>页面</th><th>能做什么</th></tr>
+      <tr><td>今天</td><td>正在上的课、下一节、距上课/下课还有多久、明天有什么</td></tr>
+      <tr><td>本周</td><td>周一到周日整周课表，今天的课高亮</td></tr>
+      <tr><td>查课</td><td>一句话问：「明天第3节」「周三下午」「英语在哪上」「这周几节课」</td></tr>
+      <tr><td>课程</td><td>全部课程、添加/修改、作息与学期、导出日历/备份</td></tr>
+      <tr><td>导入</td><td>粘贴导入、解析预览、追加或覆盖</td></tr>
+    </table>
+    <p class="muted">点任意一门课可以改名字、时间、教室、周次和上课链接；改完自动保存。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span>作息不对？</h2>
+    <p>默认作息是第 1 节 08:00、每节 45 分钟。如果和你学校不一样：</p>
+    <ol>
+      <li>进「课程」页 →「作息 / 学期」</li>
+      <li>「每节开始时间」按顺序填，逗号分隔，如 <span class="mono">08:10,09:05,10:10,10:55,14:00</span></li>
+      <li>点「保存设置」</li>
+    </ol>
+    <p>「开学第一周的周一」只影响显示「第几周」。如果你不按周次筛选课程，可以不管。</p>
+    <div class="tip"><b>提示：</b>课程里自己填了开始/结束时间的，以课程为准；只有没填时间的课才按上面作息推算。</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">7</span>装到手机主屏幕</h2>
+    <h3>iPhone / iPad（Safari）</h3>
+    <p>打开网址 → 点底部「分享」→「添加到主屏幕」→ 添加。之后像 App 一样全屏打开。</p>
+    <h3>安卓（Chrome / Edge）</h3>
+    <p>打开网址 → 右上角「⋮」→「安装应用」或「添加到主屏幕」。</p>
+    <p class="muted">装好后没有地址栏，断网也能打开（已缓存的课表照常显示）。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">8</span>想要上课前响铃</h2>
+    <p>网页做不了后台提醒，但可以借用系统日历：</p>
+    <ol>
+      <li>「课程」页 →「导出日历(.ics)」</li>
+      <li>把下载的文件发给自己（微信文件传输助手即可）</li>
+      <li>在手机上点开它，选「添加到日历」</li>
+    </ol>
+    <p>日历里会按周生成事件，自带 15 分钟前提醒，还能同步到手表。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">9</span>备份与换手机</h2>
+    <p>数据只在这台设备的浏览器里，<b>清除浏览器数据 = 课表丢失</b>。建议：</p>
+    <ul>
+      <li>「课程」页 →「导出备份」，存一份 JSON 到网盘/微信收藏</li>
+      <li>换手机时，新手机打开网址 →「导入备份」选那个 JSON</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">10</span>常见问题</h2>
+    <h3>粘贴后一条都没解析出来？</h3>
+    <p>检查每行是不是同时有<b>星期</b>或<b>节次/时间</b>——这两样至少要有一个，否则分不清是哪天的课。表格形式就带上表头。</p>
+    <h3>时间显示成 --:--？</h3>
+    <p>这门课的节次超出了你设置的作息行数。去「作息 / 学期」补上时间，或直接在这门课里填开始/结束时间。</p>
+    <h3>周次显示「本周不上」？</h3>
+    <p>多半是「开学第一周的周一」不对，改一下那个日期即可。</p>
+    <h3>导入后重复了两遍？</h3>
+    <p>用的是「追加」，同一门课同一天会自动去重只保留一条；如果还是重复，点课程删掉多余的那条，或先「清空课表」再重新「追加」。</p>
+    <h3>会不会泄露我的课表？</h3>
+    <p>不会。没有服务器、没有统计代码，数据不上传，也不会同步给任何人。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">11</span>关于</h2>
+    <p class="muted">课表助手 · 公开版，纯前端单页，可离线使用。有 bug 或想加功能，把这条网址发给我就行。</p>
+  </div>
+
+  <footer>课表助手 · 公开版 · 数据只存在你的设备</footer>
+</div>
+</body>
+</html>
