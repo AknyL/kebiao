@@ -71,6 +71,9 @@ header .sub{font-size:11.5px;opacity:.92;white-space:nowrap;overflow:hidden;text
 .chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--ink)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .hint{font-size:11.5px;color:var(--sub);line-height:1.7;margin-top:8px}
+.steps{margin:10px 0 0;padding-left:19px;font-size:12px;color:var(--sub);line-height:1.75}
+.steps li{margin-bottom:5px}
+.steps b{color:var(--ink);font-weight:600}
 .hint b{color:var(--brand);font-weight:600}
 .empty{color:var(--sub);font-size:13.5px;padding:14px 4px;text-align:center}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -216,6 +219,21 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
         <button class="btn ghost" id="impReplace">覆盖全部</button>
       </div>
       <div class="hint" style="text-align:left">这个页面可以收藏成自己的入口：地址后面加 <b>?import</b>（或 <b>#import</b>）打开就直接停在这里。</div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>书签工具：一键取自己的课表</h3>
+      <div class="hint" style="text-align:left">别的同学想导入<b>自己</b>的课表时用这个：在教务系统页面点一下书签，它就用他本人的登录态把课表抓出来，直接复制成一条链接，粘到浏览器打开即可导入。<b>不用手动输账号密码给我们</b>。</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn" id="bmCopy">复制书签代码</button>
+      </div>
+      <ol class="steps">
+        <li>Safari 打开教务系统并登录，进到「学生课表」页面</li>
+        <li>点分享 → <b>添加书签</b>，随便起个名字（如「取课表」）</li>
+        <li>打开书签列表 → 编辑这个书签 → 把<b>地址</b>整段删掉，粘贴刚复制的代码 → 保存</li>
+        <li>回到课表页，点书签栏里的「取课表」→ 提示已复制 → 地址栏粘贴打开 → 点确定导入</li>
+        <li>安卓 Chrome 同理：先收藏本页 → 长按书签改为上面的代码 → 地址栏输入书签名并选中该书签运行</li>
+      </ol>
+      <div class="hint" style="text-align:left">不想弄书签也行：在教务系统课表页<b>全选复制页面文字</b>，粘到上面第一个输入框，点「解析预览」。</div>
     </div>
   </section>
 
@@ -883,6 +901,11 @@ function initEvents(){
     courses=JSON.parse(JSON.stringify(DEFAULT));save();renderAll();renderToday();renderWeek();toast('已恢复默认课表');
   };
   $('#btnShare').onclick=openShare;
+  $('#bmCopy').onclick=()=>{
+    const el=document.getElementById('bmSrc');
+    if(!el||!el.textContent.trim()){toast('代码没加载出来，刷新一下');return;}
+    copyText(el.textContent.trim());
+  };
   $('#impCodeBtn').onclick=()=>{
     const v=$('#impCode').value.trim();
     if(!v){toast('先把分享码粘进来');return;}
@@ -1028,5 +1051,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 </script>
+
+<script id="bmSrc" type="text/plain">javascript:(async () => { try { const N = new Date(), Y = N.getFullYear(), M = N.getMonth() + 1; const AY = M >= 8 ? Y : Y - 1; const u = '/api/schedules/getCouseInfo?startDate=' + AY + '-09-01&endDate=' + (AY + 1) + '-01-31&idszh='; const r = await fetch(u, { credentials: 'include' }); if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); const find = (o, d) => { d = d || 0; if (d > 5 || !o || typeof o !== 'object') return null; if (Array.isArray(o)) return (o.length && o[0] && typeof o[0] === 'object' && 'courseName' in o[0]) ? o : null; for (const k in o) { const x = find(o[k], d + 1); if (x) return x; } return null; }; const list = find(j); if (!list || !list.length) throw new Error('接口里没有课表数据'); const wd = ds => { const x = new Date(String(ds).slice(0, 10).replace(/-/g, '/')).getDay(); return x === 0 ? 7 : x; }; const pr = t => { const a = String(t || '').match(/\d+/g) || []; const p = Number(a[0]) || 1; return [p, Number(a[1]) || p]; }; const hm = t => { const m = String(t || '').match(/(\d{1,2}):(\d{2})/); return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : ''; }; const mp = {}, ord = []; list.forEach(c => { if (!c || !c.courseName || !c.date) return; const p = pr(c.jcmc); const k = [c.courseName, wd(c.date), p[0], p[1], hm(c.startTime), hm(c.endTime)].join('|'); if (!mp[k]) { mp[k] = { n: c.courseName, d: wd(c.date), a: p[0], b: p[1], s: hm(c.startTime), e: hm(c.endTime), r: c.location || '', h: c.teacherName || '', w: {} }; ord.push(k); } const w = parseInt(String(c.weekNumber || '').replace(/\D/g, ''), 10); if (w > 0 && w < 30) mp[k].w[w] = 1; }); const wks = o => { const a = Object.keys(o).map(Number).sort((x, y) => x - y), out = []; for (const n of a) { const l = out[out.length - 1]; if (l && n === l[1] + 1) l[1] = n; else out.push([n, n]); } return out.map(r => r[0] === r[1] ? String(r[0]) : r[0] + '-' + r[1]).join(','); }; const arr = ord.map(k => { const o = mp[k], x = { n: o.n, d: o.d, a: o.a, b: o.b }; if (o.s) x.s = o.s; if (o.e) x.e = o.e; if (o.r) x.r = o.r; if (o.h) x.h = o.h; const w = wks(o.w); if (w) x.w = w; return x; }); const u8 = new TextEncoder().encode(JSON.stringify(arr)); let bin = ''; for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]); const code = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); const url = 'https://aknyl.github.io/kebiao/#s=' + code; try { await navigator.clipboard.writeText(url); alert('已复制，共 ' + arr.length + ' 门课。\n\n回到浏览器地址栏，粘贴打开，会问你要不要导入。'); } catch (e) { prompt('先长按全选复制下面这条链接，再粘到浏览器打开：', url); } } catch (e) { alert('没读到课表：' + (e && e.message ? e.message : e) + '\n\n请先登录教务系统并打开「学生课表」页面，再点这个书签。'); } })();</script>
 </body>
 </html>
