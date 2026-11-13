@@ -1,6 +1,6 @@
 // 课表助手（公开版）service worker
-const CACHE = 'kcbpub-v1';
-const ASSETS = ['./index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const CACHE = 'kcbpub-v2';
+const ASSETS = ['./index.html', './help.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
