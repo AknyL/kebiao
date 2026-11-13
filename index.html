@@ -92,6 +92,12 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .actions{display:flex;gap:8px;margin-top:6px}
 .actions .btn{flex:1 1 0;min-width:0;padding-left:8px;padding-right:8px}
 .btn.danger{background:var(--bad)}
+.importarea{width:100%;min-height:120px;font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-family:inherit;resize:vertical;line-height:1.6}
+.preview{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:10px;max-height:220px;overflow:auto;font-size:12.5px;background:var(--bg)}
+.preview .pv{padding:6px 2px;border-bottom:1px solid var(--line)}
+.preview .pv:last-child{border-bottom:none}
+.linkchip{display:inline-flex;align-items:center;gap:3px;background:rgba(79,110,247,.12);color:var(--brand);border-radius:999px;padding:2px 9px;font-size:11.5px;text-decoration:none;font-weight:600}
+body.theme-kitty .linkchip{background:rgba(255,127,174,.16);color:#e8588f}
 footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
 </style>
 </head>
@@ -112,6 +118,7 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
     <button data-tab="week">本周</button>
     <button data-tab="query">查课</button>
     <button data-tab="data">课程</button>
+    <button data-tab="import">导入</button>
   </nav>
 
   <section id="tab-today">
@@ -167,11 +174,35 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
         <button class="btn ghost" id="btnExp">导出备份</button>
       </div>
       <div class="actions" style="margin-top:8px">
+        <button class="btn" id="btnSmartImp">📥 智能导入（钉钉 / 表格 / 文字）</button>
+      </div>
+      <div class="actions" style="margin-top:8px">
         <button class="btn ghost" id="btnImp">导入备份</button>
         <button class="btn ghost" id="btnReset">恢复默认</button>
       </div>
       <div class="hint">想在上课前响铃：点「导出日历」，把文件发给自己的 iPhone，用「日历」打开导入即可（网页版做不了后台提醒，系统日历可以）。</div>
       <input type="file" id="fileImp" accept=".json,application/json" class="hidden">
+    </div>
+  </section>
+
+  <section id="tab-import" class="hidden">
+    <div class="card">
+      <h3><span class="dot"></span>自己导入课表</h3>
+      <div class="f"><label>粘贴课表文字 / 表格 / 钉钉上课链接</label>
+        <textarea id="impText" class="importarea" placeholder="每行一门课，例如：&#10;周一 第1-2节 系统解剖学 荣鸣歌 1201&#10;周三 10:10-11:35 英语（1） 周阿芹 https://h5.dingtalk.com/..."></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="impFileBtn">选文件（.txt/.csv/.json）</button>
+        <button class="btn ghost" id="impParse">解析预览</button>
+      </div>
+      <input type="file" id="impFile" accept=".txt,.csv,.tsv,.json,text/plain,application/json" class="hidden">
+      <div id="impPrev"></div>
+      <div class="hint" style="text-align:left">能认：<b>周一 / 星期三</b>、<b>第3节 / 3-5节</b>、<b>10:10-11:35</b>、<b>第3-16周</b>；行内<b>钉钉/直播链接</b>自动挂到这门课。同名同天的课只补链接，不会重复添加。</div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn" id="impMerge">追加</button>
+        <button class="btn ghost" id="impReplace">覆盖全部</button>
+      </div>
+      <div class="hint" style="text-align:left">这个页面可以收藏成自己的入口：地址后面加 <b>?import</b>（或 <b>#import</b>）打开就直接停在这里。</div>
     </div>
   </section>
 
@@ -287,6 +318,7 @@ function courseHTML(c,opts){
     '<span>'+esc(weeksText(c))+'</span>'+
     (c.room?'<span>📍 '+esc(c.room)+'</span>':'')+
     (c.teacher?'<span>👤 '+esc(c.teacher)+'</span>':'')+
+    (c.link?'<a class="linkchip" href="'+esc(c.link)+'" target="_blank" rel="noopener">🔗 上课</a>':'')+
     (pill?('<span>'+pill+'</span>'):'');
   return '<div class="course'+(st==='done'?' done':'')+(opts.dim?' dim':'')+'" data-id="'+c.id+'">'+
     '<div class="tm"><b>'+esc(cStart(c))+'</b>'+esc(cEnd(c))+'</div>'+
@@ -322,6 +354,7 @@ function renderToday(){
     box.innerHTML='<div class="hero"><div class="lab"><span>'+(cur?'正在上':'下一节')+'</span><span>第'+c.p0+(c.p1>c.p0?('–'+c.p1):'')+'节</span></div>'+
       '<div class="nm">'+esc(c.name)+'</div>'+
       '<div class="meta"><span>🕘 '+esc(range(c))+'</span>'+(c.room?'<span>📍 '+esc(c.room)+'</span>':'')+(c.teacher?'<span>👤 '+esc(c.teacher)+'</span>':'')+'</div>'+
+      (c.link?'<a class="linkchip" style="margin-top:8px" href="'+esc(c.link)+'" target="_blank" rel="noopener">🔗 进入课堂</a>':'')+
       cd+'</div>';
   }else{
     box.innerHTML='<div class="hero"><div class="lab"><span>今天</span><span>'+fmtDate(d)+' · 第'+wk+'周</span></div>'+
@@ -514,6 +547,7 @@ function openEdit(c){
     '<div class="f"><label>结束节</label><select id="eP1">'+perOpts(c.p1)+'</select></div></div>'+
     '<div class="row2"><div class="f"><label>教室</label><input id="eRoom" type="text" value="'+esc(c.room)+'"></div>'+
     '<div class="f"><label>老师</label><input id="eTeacher" type="text" value="'+esc(c.teacher)+'"></div></div>'+
+    '<div class="f"><label>上课链接（钉钉/直播地址，可留空）</label><input id="eLink" type="text" value="'+esc(c.link||'')+'" placeholder="https://...dingtalk... 或直播地址"></div>'+
     '<div class="f"><label>周次</label><input id="eWeeks" type="text" value="'+esc((c.weeks||[]).join(','))+' " placeholder="如 3-16 或 3,5,7 或留空=每周"></div>'+
     '<div class="hint" style="text-align:left;padding:0 2px 4px">周次写成「3-16」表示第 3 到 16 周；留空表示每周都上。</div>'+
     '<div class="actions"><button class="btn" id="eSave">保存</button><button class="btn ghost" id="eCancel">取消</button></div>'+
@@ -526,7 +560,8 @@ function openEdit(c){
     const weeks=parseWeeks($('#eWeeks').value);
     const obj={id:c.id||('c'+Date.now()+Math.floor(Math.random()*99)),name:nm,day:Number($('#eDay').value),
       p0:Math.min(p0,p1),p1:Math.max(p0,p1),start:pStart(Math.min(p0,p1)),end:pEnd(Math.max(p0,p1)),
-      room:$('#eRoom').value.trim(),teacher:$('#eTeacher').value.trim(),weeks};
+      room:$('#eRoom').value.trim(),teacher:$('#eTeacher').value.trim(),weeks,
+      link:$('#eLink').value.trim()};
     if(isNew)courses.push(obj);
     else courses=courses.map(x=>x.id===c.id?obj:x);
     save();closeModal();renderAll();renderToday();renderWeek();toast('已保存');
@@ -537,6 +572,213 @@ function openEdit(c){
   };
 }
 function closeModal(){$('#modal').classList.add('hidden');$('#sheet').innerHTML='';}
+
+/* ---------- 智能导入 ---------- */
+const DMAP={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':7,'天':7};
+const URLRE=/https?:\/\/[^\s"'<>）)，,；;]+/gi;
+
+function findLinks(s){
+  const out=[];let m;URLRE.lastIndex=0;
+  while((m=URLRE.exec(s))){
+    const u=m[0].replace(/[。．.]+$/,'');
+    if(out.indexOf(u)<0)out.push(u);
+  }
+  return out;
+}
+function dayOf(s){
+  const m=s.match(/(?:周|星期|礼拜)\s*([一二三四五六日天1-7])/);
+  return m?(DMAP[m[1]]||Number(m[1])||0):0;
+}
+function periodsOf(s){
+  const m=s.match(/第?\s*(\d{1,2})\s*(?:[-~—–至到]\s*(\d{1,2}))?\s*节/);
+  if(!m)return null;
+  let a=Number(m[1]),b=Number(m[2]||m[1]);
+  if(a>b){const t=a;a=b;b=t;}
+  const max=PLIST[PLIST.length-1];
+  if(a<1||b>max)return null;
+  return [a,b];
+}
+function timeOf(s){
+  let m=s.match(/(\d{1,2})[:：](\d{2})\s*[-~—–至到]\s*(\d{1,2})[:：](\d{2})/);
+  if(m)return [pad(+m[1])+':'+m[2],pad(+m[3])+':'+m[4]];
+  m=s.match(/(\d{1,2})[:：](\d{2})/);
+  return m?[pad(+m[1])+':'+m[2],'']:null;
+}
+function weeksOf(s){
+  const m=s.match(/(\d{1,2}(?:\s*[-~,、，]\s*\d{1,2})*)\s*周/);
+  return m?parseWeeks(m[1]):[];
+}
+function stripMetaRaw(s){
+  return s.replace(URLRE,' ')
+    .replace(/(?:周|星期|礼拜)\s*[一二三四五六日天1-7]/g,' ')
+    .replace(/第?\s*\d{1,2}\s*(?:[-~—–至到]\s*(\d{1,2}))?\s*节/g,' ')
+    .replace(/\d{1,2}[:：]\d{2}\s*[-~—–至到]?\s*\d{1,2}[:：]\d{2}/g,' ')
+    .replace(/\d{1,2}[:：]\d{2}/g,' ')
+    .replace(/第?\s*\d{1,2}(?:\s*[-~,、，]\s*\d{1,2})*\s*周/g,' ')
+    .replace(/[|｜,，;；\t]/g,' ');
+}
+function stripMeta(s){return stripMetaRaw(s).replace(/\s+/g,' ').trim();}
+function periodsFromTime(tm){
+  if(!tm||!tm[0])return null;
+  const ps=PLIST.filter(p=>BELL[p]&&toMin(BELL[p])<=toMin(tm[0]));
+  const p0=ps.length?ps[ps.length-1]:1;
+  let p1=p0;
+  if(tm[1]){
+    const pe=toMin(tm[1]);
+    const cand=PLIST.filter(p=>p>=p0&&toMin(pEnd(p))<=pe+5);
+    if(cand.length)p1=Math.max(p0,cand[cand.length-1]);
+  }
+  return [p0,p1];
+}
+function parseTextImport(text){
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const items=[],notes=[];
+  const knownNames=courses.map(c=>c.name).concat(DEFAULT.map(c=>c.name)).filter(Boolean);
+  for(const line of lines){
+    if(/^(序号|课程名称|课程名?|课表|星期|时间|节次|教师|地点)\s*[:：|｜\t]/.test(line))continue;
+    const links=findLinks(line);
+    const day=dayOf(line), per=periodsOf(line), tm=timeOf(line), wks=weeksOf(line);
+    let name=stripMeta(line).replace(/^[\s,，、;；|｜]+|[\s,，、;；|｜]+$/g,''),teacher='',room='';
+    const wide=stripMetaRaw(line).split(/\s{2,}/).map(x=>x.trim()).filter(Boolean);
+    if(wide.length>1){name=wide[0];teacher=wide[1]||'';room=wide[2]||'';}
+    if(/[|｜]/.test(line)){
+      const parts=line.split(/[|｜]/).map(x=>x.trim()).filter(Boolean)
+        .map(x=>x.replace(URLRE,'').trim()).filter(Boolean);
+      if(parts.length){name=parts[0];teacher=parts[1]||teacher;room=parts[2]||room;}
+    }
+    // 用已知课程名对齐：把「课程名 老师 教室」拆开
+    if(!teacher){
+      const hit=knownNames.filter(n=>name.indexOf(n)>=0).sort((a,b)=>b.length-a.length)[0];
+      if(hit){
+        const rest=name.replace(hit,'').replace(/\s+/g,' ').trim();
+        name=hit;
+        if(rest){const toks=rest.split(' ');teacher=toks[0]||'';room=toks[1]||room;}
+      }
+    }
+    if(!name){if(links.length)notes.push('只有链接没有课程名，已跳过');continue;}
+    const pr=per||periodsFromTime(tm);
+    if(!day&&!pr){notes.push('「'+name+'」没写星期/节次，已跳过');continue;}
+    const p0=pr?pr[0]:1, p1=pr?pr[1]:p0;
+    items.push({name:name,day:day||todayIdx(),p0:p0,p1:p1,
+      start:(tm&&tm[0])||pStart(p0),end:(tm&&tm[1])||pEnd(p1),
+      room:room,teacher:teacher,weeks:wks,link:links[0]||''});
+  }
+  return {items,notes};
+}
+function parseCSVImport(text){
+  const rows=String(text||'').split(/\r?\n/).map(r=>r.trim()).filter(Boolean);
+  if(rows.length<2)return null;
+  const sep=rows[0].indexOf('\t')>=0?'\t':(rows[0].indexOf('|')>=0?'|':',');
+  const head=rows[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,''));
+  const pick=names=>{for(const n of names){const i=head.findIndex(h=>h===n||h.indexOf(n)>=0);if(i>=0)return i;}return -1;};
+  const iName=pick(['课程名','课程','科目','名称','name']);
+  if(iName<0)return null;
+  const iDay=pick(['星期','周几','day']), iP0=pick(['开始节','起始节','p0']), iP1=pick(['结束节','p1']),
+        iRoom=pick(['教室','地点','room']), iTea=pick(['老师','教师','teacher']),
+        iWk=pick(['周次','weeks']), iLink=pick(['链接','网址','url','link']);
+  const items=[];
+  for(const r of rows.slice(1)){
+    const c=r.split(sep).map(x=>x.trim().replace(/^"|"$/g,''));
+    const nm=(c[iName]||'').trim();
+    if(!nm)continue;
+    const day=iDay>=0?(dayOf(c[iDay])||Number(String(c[iDay]).replace(/\D/g,''))||0):0;
+    let p0=iP0>=0?(Number(String(c[iP0]).replace(/\D/g,''))||1):1;
+    let p1=iP1>=0?(Number(String(c[iP1]).replace(/\D/g,''))||p0):p0;
+    if(p0>p1){const t=p0;p0=p1;p1=t;}
+    items.push({name:nm,day:day||todayIdx(),p0:p0,p1:p1,
+      start:pStart(p0),end:pEnd(p1),
+      room:iRoom>=0?c[iRoom]:'',teacher:iTea>=0?c[iTea]:'',
+      weeks:iWk>=0?parseWeeks(c[iWk]):[],
+      link:iLink>=0?(findLinks(c[iLink])[0]||c[iLink]):''});
+  }
+  return items.length?items:null;
+}
+function normalizeCourse(c,i){
+  let p0=Number(c.p0)||1, p1=Number(c.p1)||p0;
+  if(p0>p1){const t=p0;p0=p1;p1=t;}
+  return {id:c.id||('i'+Date.now()+'_'+i),name:String(c.name||'课程'),day:Number(c.day)||1,
+    p0:p0,p1:p1,start:c.start||pStart(p0),end:c.end||pEnd(p1),
+    room:c.room||'',teacher:c.teacher||'',
+    weeks:Array.isArray(c.weeks)?c.weeks:[],
+    link:c.link||''};
+}
+function parseImport(text){
+  const t=String(text||'').trim();
+  if(!t)return {items:[],notes:['没有内容']};
+  if(t[0]==='['||t[0]==='{'){
+    try{
+      const j=JSON.parse(t);
+      const arr=Array.isArray(j)?j:(Array.isArray(j.courses)?j.courses:null);
+      if(arr)return {items:arr.map(normalizeCourse),notes:['按 JSON 解析']};
+    }catch(e){}
+  }
+  if(/[\t,|]/.test(t.split(/\r?\n/)[0])){
+    const c=parseCSVImport(t);
+    if(c)return {items:c,notes:['按表格（CSV/TSV）解析']};
+  }
+  return parseTextImport(t);
+}
+function applyImport(items,mode){
+  let added=0,linked=0,skipped=0;
+  if(mode==='replace')courses=[];
+  for(const raw of items){
+    const it=normalizeCourse(raw,added);
+    const same=courses.find(c=>c.name===it.name&&c.day===it.day);
+    if(same&&it.link&&!same.link){
+      same.link=it.link;
+      if(!same.teacher&&it.teacher)same.teacher=it.teacher;
+      if(!same.room&&it.room)same.room=it.room;
+      linked++;continue;
+    }
+    if(same){skipped++;continue;}
+    courses.push(it);added++;
+  }
+  save();renderAll();renderToday();renderWeek();
+  return {added,linked,skipped};
+}
+function switchTab(name){
+  document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x.dataset.tab===name));
+  ['today','week','query','data','import'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==name));
+  if(name==='week')renderWeek();
+  if(name==='data')renderAll();
+  if(name==='import'){try{$('#impText').focus();}catch(e){}}
+}
+function initImport(){
+  let parsed=null;
+  const showPrev=()=>{
+    if(!parsed)return;
+    const box=$('#impPrev'),items=parsed.items,notes=parsed.notes;
+    box.innerHTML='<div class="preview"><div class="pv"><b>解析到 '+items.length+' 条</b>'+
+      (notes.length?(' · '+notes.length+' 条备注'):'')+'</div>'+
+      items.slice(0,8).map(c=>'<div class="pv">'+esc(WD[c.day]+' 第'+c.p0+(c.p1>c.p0?('–'+c.p1):'')+'节 · '+c.name)+
+        (c.link?' <span class="linkchip">🔗 有链接</span>':'')+'</div>').join('')+
+      (items.length>8?'<div class="pv muted">…还有 '+(items.length-8)+' 条</div>':'')+
+      notes.slice(0,4).map(n=>'<div class="pv muted">· '+esc(n)+'</div>').join('')+'</div>';
+  };
+  $('#impParse').onclick=()=>{parsed=parseImport($('#impText').value);showPrev();toast('解析到 '+parsed.items.length+' 条');};
+  $('#impFileBtn').onclick=()=>$('#impFile').click();
+  $('#impFile').onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const fr=new FileReader();
+    fr.onload=()=>{$('#impText').value=String(fr.result);parsed=parseImport($('#impText').value);showPrev();};
+    fr.readAsText(f);e.target.value='';
+  };
+  $('#impMerge').onclick=()=>{
+    if(!parsed)parsed=parseImport($('#impText').value);
+    if(!parsed.items.length){toast('没解析出课程');return;}
+    const r=applyImport(parsed.items,'merge');
+    toast('导入完成：新增 '+r.added+' 门'+(r.linked?('，补链接 '+r.linked+' 门'):''));
+    parsed=null;$('#impPrev').innerHTML='';
+  };
+  $('#impReplace').onclick=()=>{
+    if(!parsed)parsed=parseImport($('#impText').value);
+    if(!parsed.items.length){toast('没解析出课程');return;}
+    if(!confirm('清空现有 '+courses.length+' 门课，换成新的 '+parsed.items.length+' 门？'))return;
+    const r=applyImport(parsed.items,'replace');
+    toast('已替换为 '+r.added+' 门课');
+    parsed=null;$('#impPrev').innerHTML='';
+  };
+}
 
 /* ---------- 导出 ---------- */
 function download(name,text,type){
@@ -566,7 +808,8 @@ function buildICS(){
         'DTEND:'+toUTC(en),
         'SUMMARY:'+icsEsc(c.name),
         (c.room?('LOCATION:'+icsEsc(c.room)):''),
-        'DESCRIPTION:'+icsEsc(WD[c.day]+' 第'+c.p0+(c.p1>c.p0?('–'+c.p1):'')+'节'+(c.teacher?(' · '+c.teacher):'')),
+        (c.link?('URL:'+icsEsc(c.link)):''),
+        'DESCRIPTION:'+icsEsc(WD[c.day]+' 第'+c.p0+(c.p1>c.p0?('–'+c.p1):'')+'节'+(c.teacher?(' · '+c.teacher):'')+(c.link?('\n上课链接：'+c.link):'')),
         'BEGIN:VALARM','TRIGGER:-PT10M','ACTION:DISPLAY','DESCRIPTION:上课提醒','END:VALARM',
         'END:VEVENT');
     }
@@ -582,13 +825,7 @@ function toUTC(d){
 /* ---------- 事件 ---------- */
 function initEvents(){
   document.querySelectorAll('#seg button').forEach(b=>{
-    b.onclick=()=>{
-      document.querySelectorAll('#seg button').forEach(x=>x.classList.remove('on'));
-      b.classList.add('on');
-      ['today','week','query','data'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
-      if(b.dataset.tab==='week')renderWeek();
-      if(b.dataset.tab==='data')renderAll();
-    };
+    b.onclick=()=>switchTab(b.dataset.tab);
   });
   $('#btnTheme').onclick=toggleTheme;
 
@@ -599,6 +836,7 @@ function initEvents(){
   });
 
   document.body.addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
     const row=e.target.closest('.course');
     if(row&&row.dataset.id){
       const c=courses.find(x=>x.id===row.dataset.id);
@@ -606,6 +844,8 @@ function initEvents(){
     }
   });
   $('#btnAdd').onclick=()=>openEdit(null);
+  $('#btnSmartImp').onclick=()=>switchTab('import');
+  initImport();
   $('#btnIcs').onclick=()=>{download('课表.ics',buildICS(),'text/calendar;charset=utf-8');toast('已导出，用系统日历打开它');};
   $('#btnExp').onclick=()=>{download('课表备份.json',JSON.stringify(courses,null,1),'application/json');};
   $('#btnImp').onclick=()=>$('#fileImp').click();
@@ -618,7 +858,7 @@ function initEvents(){
         if(!Array.isArray(arr)||!arr.length)throw 0;
         courses=arr.map((c,i)=>({id:c.id||('i'+Date.now()+i),name:String(c.name||'课程'),day:Number(c.day)||1,p0:Number(c.p0)||1,p1:Number(c.p1)||Number(c.p0)||1,
           start:c.start||pStart(Number(c.p0)||1),end:c.end||pEnd(Number(c.p1)||Number(c.p0)||1),
-          room:c.room||'',teacher:c.teacher||'',weeks:Array.isArray(c.weeks)?c.weeks:[]}));
+          room:c.room||'',teacher:c.teacher||'',weeks:Array.isArray(c.weeks)?c.weeks:[],link:c.link||''}));
         save();renderAll();renderToday();renderWeek();toast('导入成功，共 '+courses.length+' 门课');
       }catch(err){toast('这个文件读不出来');}
     };
@@ -639,6 +879,7 @@ function boot(){
   courses=courses.map((c,i)=>({...c,id:c.id||('c'+i+Date.now())}));
   renderToday();renderAll();renderWeek();
   initEvents();
+  if(/[?&]import\b/.test(location.search)||/import/i.test(location.hash))switchTab('import');
   setInterval(renderToday,30000);
 }
 boot();
