@@ -1,5 +1,5 @@
 // 课表 PWA service worker
-const CACHE = 'kebiao-v1';
+const CACHE = 'kebiao-v2';
 const ASSETS = ['./index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
