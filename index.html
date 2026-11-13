@@ -51,6 +51,7 @@ header .sub{font-size:11.5px;opacity:.92;white-space:nowrap;overflow:hidden;text
 .hero .cd b{font-size:18px;font-variant-numeric:tabular-nums}
 .course{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .course:last-child{border-bottom:none}
+.course.dim{opacity:.45}
 .course .tm{flex:0 0 84px;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;line-height:1.35}
 .course .tm b{display:block;color:var(--ink);font-size:13px}
 .course .bd{flex:1 1 auto;min-width:0}
@@ -183,24 +184,40 @@ footer{text-align:center;color:var(--sub);font-size:11.5px;padding:6px 0 2px}
 <script>
 /* ---------- 基础 ---------- */
 const $ = s => document.querySelector(s);
-const KEY = 'kcb_courses_v1';
+const KEY = 'kcb_courses_v2';
 const THEME_KEY = 'kcb_theme';
 
-const BELL = {1:'08:45',2:'09:30',3:'10:15',4:'11:00',5:'11:45',6:'12:30',8:'13:15',9:'14:00',10:'14:45',11:'15:30',12:'16:15',13:'17:00',14:'17:45',15:'18:30',16:'19:15'};
+const BELL = {1:'08:30',2:'09:15',3:'10:10',4:'10:55',5:'11:40',8:'13:30',9:'14:15',10:'15:00',11:'15:45',12:'16:30',13:'17:15',14:'18:20',15:'19:05',16:'19:50',17:'20:35',18:'21:00',19:'21:25',20:'21:50'};
 const PLIST = Object.keys(BELL).map(Number).sort((a,b)=>a-b);
 const WD = ['','周一','周二','周三','周四','周五','周六','周日'];
 
+// 第 1 周星期一（教务系统 2026-2027 学年第一学期）
+const W1 = new Date(2026,8,7);
+
 const DEFAULT = [
-  {name:'大学生职业生涯规划与就业指导（上）',day:1,p0:1,p1:3,room:'2401',teacher:'张和敏'},
-  {name:'系统解剖学',day:2,p0:3,p1:5,room:'1201',teacher:'荣鸣歌'},
-  {name:'系统解剖学',day:2,p0:8,p1:10,room:'1201',teacher:'韦玉兵'},
-  {name:'英语（1）',day:3,p0:3,p1:5,room:'2416',teacher:'周阿芹'},
-  {name:'明眸之路·爱眼护眼的前世、今生与未来',day:3,p0:14,p1:16,room:'在线学习（滨海）',teacher:'张韵婕'},
-  {name:'组织胚胎学',day:4,p0:1,p1:2,room:'1301',teacher:'陈佰慧'},
-  {name:'护理基本人文素养',day:4,p0:3,p1:4,room:'5220',teacher:'韩楹'},
-  {name:'思想道德与法治',day:5,p0:3,p1:5,room:'2305',teacher:'翁攀峰'},
-  {name:'思想道德与法治',day:6,p0:3,p1:5,room:'2305',teacher:'翁攀峰'},
-  {name:'体育（1）（体能素质）',day:6,p0:8,p1:9,room:'滨海操场看台下',teacher:'胡忠忠'}
+  {id:1,name:"大学生职业生涯规划与就业指导（上）",day:1,p0:1,p1:3,start:"08:30",end:"10:50",room:"2401",teacher:"张和敏",weeks:[6,7,8,9,10]},
+  {id:2,name:"系统解剖学",day:2,p0:3,p1:5,start:"10:10",end:"12:20",room:"1201",teacher:"荣鸣歌",weeks:[3,7,8,10,11,12,13,15,16]},
+  {id:3,name:"系统解剖学",day:2,p0:3,p1:4,start:"10:10",end:"11:35",room:"1201",teacher:"荣鸣歌",weeks:[14]},
+  {id:4,name:"英语（1）",day:2,p0:14,p1:16,start:"18:20",end:"20:30",room:"在线学习（滨海）",teacher:"周阿芹",weeks:[8,13]},
+  {id:5,name:"英语（1）",day:3,p0:3,p1:5,start:"10:10",end:"12:20",room:"2416",teacher:"周阿芹",weeks:[3,4,6,7,8,9,10,11,12,13,14,15,16,17]},
+  {id:6,name:"系统解剖学",day:3,p0:8,p1:11,start:"13:30",end:"16:25",room:"4113解剖实验室（4）",teacher:"丁茂超",weeks:[4,6,8,12,13,16]},
+  {id:7,name:"系统解剖学",day:3,p0:8,p1:10,start:"13:30",end:"15:40",room:"1201",teacher:"韦玉兵",weeks:[7,10,11,14,15]},
+  {id:8,name:"明眸之路：爱眼护眼的前世、今生与未来",day:3,p0:14,p1:16,start:"18:20",end:"20:30",room:"在线学习（滨海）",teacher:"韩佳欣、傅映晖、常平骏、聂莉、张韵婕、徐东野、季娴、吴双庆、窦仁慧、陈岩、侯立杰",weeks:[3,4,6,7,8,9,10,11,12,13,14,15]},
+  {id:9,name:"护理基本人文素养",day:3,p0:17,p1:19,start:"20:35",end:"21:45",room:"超星学习通（滨海）",teacher:"陈海燕、高晨晨",weeks:[6,8]},
+  {id:10,name:"护理基本人文素养",day:3,p0:17,p1:17,start:"20:35",end:"20:55",room:"超星学习通（滨海）",teacher:"陈军",weeks:[3]},
+  {id:11,name:"护理基本人文素养",day:3,p0:17,p1:18,start:"20:35",end:"21:20",room:"超星学习通（滨海）",teacher:"吴永琴、邱贤云",weeks:[5,11]},
+  {id:12,name:"组织胚胎学",day:4,p0:1,p1:2,start:"08:30",end:"09:55",room:"1301",teacher:"陈佰慧",weeks:[5,6,7,8,10,11,12,13,14,15]},
+  {id:13,name:"护理基本人文素养",day:4,p0:3,p1:4,start:"10:10",end:"11:35",room:"1204/5220",teacher:"高晨晨、韩楹、陈军、吴永琴、陈颖颖、徐天梦",weeks:[3,5,6,10,11,12,13,15]},
+  {id:14,name:"护理基本人文素养",day:4,p0:3,p1:5,start:"10:10",end:"12:20",room:"1204/5220",teacher:"胡丹红、陈海燕、高晨晨",weeks:[7,8,14]},
+  {id:15,name:"组织胚胎学",day:4,p0:8,p1:10,start:"13:30",end:"15:40",room:"5328形态学实验室（3）",teacher:"陈佰慧",weeks:[11,12]},
+  {id:16,name:"组织胚胎学",day:4,p0:8,p1:11,start:"13:30",end:"16:25",room:"5328形态学实验室（3）",teacher:"陈佰慧",weeks:[13,14,15]},
+  {id:17,name:"护理基本人文素养",day:4,p0:17,p1:17,start:"20:35",end:"20:55",room:"超星学习通（滨海）",teacher:"高晨晨",weeks:[7]},
+  {id:18,name:"组织胚胎学",day:4,p0:18,p1:20,start:"21:00",end:"22:10",room:"",teacher:"陈佰慧",weeks:[8]},
+  {id:19,name:"思想道德与法治",day:5,p0:3,p1:5,start:"10:10",end:"12:20",room:"2305",teacher:"翁攀峰",weeks:[5,6,7,8,10,11,12,13,14,15,16]},
+  {id:20,name:"体育（1）（体能素质）",day:5,p0:8,p1:9,start:"13:30",end:"14:55",room:"滨海操场看台下",teacher:"胡忠忠",weeks:[5,6,7,8,10,11,12,13,14,15,16]},
+  {id:21,name:"思想道德与法治",day:6,p0:3,p1:5,start:"10:10",end:"12:20",room:"2305",teacher:"翁攀峰",weeks:[6,8,10]},
+  {id:22,name:"形势与政策",day:7,p0:2,p1:5,start:"09:15",end:"12:20",room:"2107",teacher:"纪欣农、谢海霞",weeks:[12,13]},
+  {id:23,name:"思想政治理论课社会实践",day:7,p0:2,p1:4,start:"09:15",end:"11:35",room:"1403",teacher:"吴杨",weeks:[7,8]}
 ];
 
 let courses = [];
@@ -210,12 +227,32 @@ const pad = n => (n<10?'0':'')+n;
 function addMin(t,n){const [h,m]=t.split(':').map(Number);const d=new Date(2000,0,1,h,m+n);return pad(d.getHours())+':'+pad(d.getMinutes());}
 function toMin(t){const [h,m]=t.split(':').map(Number);return h*60+m;}
 function pStart(p){return BELL[p]||null;}
-function pEnd(p){const s=pStart(p);return s?addMin(s,45):null;}
-function range(c){const s=pStart(c.p0)||'--:--';const e=pEnd(c.p1)||'--:--';return s+'–'+e;}
+function pEnd(p){const s=pStart(p);return s?addMin(s,p>=17?20:40):null;}
+function cStart(c){return c.start||pStart(c.p0)||'--:--';}
+function cEnd(c){return c.end||pEnd(c.p1)||'--:--';}
+function range(c){return cStart(c)+'–'+cEnd(c);}
 function nowMin(){const d=new Date();return d.getHours()*60+d.getMinutes();}
 function todayIdx(){return new Date().getDay()||7;}
 function fmtDate(d){return (d.getMonth()+1)+'月'+d.getDate()+'日';}
 function mondayOf(d){const x=new Date(d);const w=(x.getDay()||7)-1;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x;}
+/* 周次：第 1 周 = 2026-09-07 那周 */
+function weekOf(d){const x=mondayOf(d);return Math.floor(Math.round((x-W1)/86400000)/7)+1;}
+function curWeek(){return weekOf(new Date());}
+function activeIn(c,w){return !c.weeks||!c.weeks.length||c.weeks.indexOf(w)>=0;}
+function weeksText(c){
+  const w=(c.weeks||[]).slice().sort((a,b)=>a-b);
+  if(!w.length)return '每周';
+  // 合并连续区间
+  const runs=[];
+  for(const n of w){
+    const last=runs[runs.length-1];
+    if(last&&n===last[1]+1)last[1]=n; else runs.push([n,n]);
+  }
+  const from=runs[0][0], to=runs[runs.length-1][1];
+  if(runs.length>1&&runs.every(r=>r[0]%2===1&&r[1]%2===1)&&to-from+1>=w.length*2-1)return '第'+from+'–'+to+'周 单周';
+  if(runs.length>1&&runs.every(r=>r[0]%2===0&&r[1]%2===0)&&to-from+1>=w.length*2-1)return '第'+from+'–'+to+'周 双周';
+  return '第'+runs.map(r=>r[0]===r[1]?r[0]:r[0]+'–'+r[1]).join('、')+'周';
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastTimer=null;
 function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),ms||2200);}
@@ -235,7 +272,7 @@ function save(){
 
 /* ---------- 渲染：今天 ---------- */
 function statusOf(c){
-  const s=toMin(pStart(c.p0)), e=toMin(pEnd(c.p1)), n=nowMin();
+  const s=toMin(cStart(c)), e=toMin(cEnd(c)), n=nowMin();
   if(n>=e) return 'done';
   if(n>=s) return 'now';
   return 'next';
@@ -247,32 +284,33 @@ function courseHTML(c,opts){
                st==='done' ? '<span class="pill">已结束</span>' :
                st==='next' ? '<span class="pill next">待上</span>' : '';
   const meta = '<span>'+esc(WD[c.day])+' · 第'+c.p0+(c.p1>c.p0?('–'+c.p1):'')+'节</span>'+
+    '<span>'+esc(weeksText(c))+'</span>'+
     (c.room?'<span>📍 '+esc(c.room)+'</span>':'')+
     (c.teacher?'<span>👤 '+esc(c.teacher)+'</span>':'')+
     (pill?('<span>'+pill+'</span>'):'');
   return '<div class="course'+(st==='done'?' done':'')+'" data-id="'+c.id+'">'+
-    '<div class="tm"><b>'+esc(pStart(c.p0)||'')+'</b>'+esc(pEnd(c.p1)||'')+'</div>'+
+    '<div class="tm"><b>'+esc(cStart(c))+'</b>'+esc(cEnd(c))+'</div>'+
     '<div class="bd"><div class="nm">'+esc(c.name)+'</div>'+
       '<div class="mt">'+meta+'</div></div></div>';
 }
 function renderToday(){
-  const d=new Date(), wd=todayIdx();
-  const list=courses.filter(c=>c.day===wd).sort((a,b)=>a.p0-b.p0);
-  $('#hSub').textContent=fmtDate(d)+' '+WD[wd]+(list.length?(' · 今天 '+list.length+' 门课'):' · 今天没课');
+  const d=new Date(), wd=todayIdx(), wk=curWeek();
+  const list=courses.filter(c=>c.day===wd&&activeIn(c,wk)).sort((a,b)=>a.p0-b.p0);
+  $('#hSub').textContent=fmtDate(d)+' '+WD[wd]+' 第'+wk+'周'+(list.length?(' · 今天 '+list.length+' 门课'):' · 今天没课');
 
   // 下一节 / 正在上
   const n=nowMin();
   let cur=null,next=null;
   for(const c of list){
-    const s=toMin(pStart(c.p0)),e=toMin(pEnd(c.p1));
+    const s=toMin(cStart(c)),e=toMin(cEnd(c));
     if(n>=s&&n<e){cur=c;break;}
   }
-  if(!cur){for(const c of list){if(toMin(pStart(c.p0))>n){next=c;break;}}}
+  if(!cur){for(const c of list){if(toMin(cStart(c))>n){next=c;break;}}}
 
   const box=$('#heroBox');
   if(cur||next){
     const c=cur||next;
-    const s=toMin(pStart(c.p0)), e=toMin(pEnd(c.p1));
+    const s=toMin(cStart(c)), e=toMin(cEnd(c));
     let cd='';
     if(cur){
       const left=e-n;
@@ -286,7 +324,7 @@ function renderToday(){
       '<div class="meta"><span>🕘 '+esc(range(c))+'</span>'+(c.room?'<span>📍 '+esc(c.room)+'</span>':'')+(c.teacher?'<span>👤 '+esc(c.teacher)+'</span>':'')+'</div>'+
       cd+'</div>';
   }else{
-    box.innerHTML='<div class="hero"><div class="lab"><span>今天</span><span>'+fmtDate(d)+'</span></div>'+
+    box.innerHTML='<div class="hero"><div class="lab"><span>今天</span><span>'+fmtDate(d)+' · 第'+wk+'周</span></div>'+
       '<div class="nm">'+(list.length?'今天的课上完啦 🎉':'今天没课 🎉')+'</div>'+
       '<div class="meta"><span>明天：'+tomorrowBrief()+'</span></div></div>';
   }
@@ -295,28 +333,30 @@ function renderToday(){
     ? list.map(c=>courseHTML(c,{status:statusOf(c)})).join('')
     : '<div class="empty">今天没有课，好好休息</div>';
 
-  const twd=wd===7?1:wd+1;
-  const tl=courses.filter(c=>c.day===twd).sort((a,b)=>a.p0-b.p0);
+  const tw=new Date(d); tw.setDate(d.getDate()+1);
+  const twd=tw.getDay()||7, twk=weekOf(tw);
+  const tl=courses.filter(c=>c.day===twd&&activeIn(c,twk)).sort((a,b)=>a.p0-b.p0);
   $('#tomorrowList').innerHTML = tl.length
     ? tl.map(c=>courseHTML(c)).join('')
     : '<div class="empty">明天没有课</div>';
 }
 function tomorrowBrief(){
-  const twd=todayIdx()===7?1:todayIdx()+1;
-  const tl=courses.filter(c=>c.day===twd).sort((a,b)=>a.p0-b.p0);
+  const tw=new Date(); tw.setDate(tw.getDate()+1);
+  const twd=tw.getDay()||7, twk=weekOf(tw);
+  const tl=courses.filter(c=>c.day===twd&&activeIn(c,twk)).sort((a,b)=>a.p0-b.p0);
   if(!tl.length)return '没课';
-  return tl.length+' 门（'+tl.map(c=>pStart(c.p0)+' '+c.name).join('；')+'）';
+  return tl.length+' 门（'+tl.map(c=>cStart(c)+' '+c.name).join('；')+'）';
 }
 
 /* ---------- 渲染：本周 ---------- */
 function renderWeek(){
   const mon=mondayOf(new Date());
-  const wd=todayIdx();
+  const wd=todayIdx(), wk=curWeek();
   let html='';
   for(let d=1;d<=7;d++){
     const dt=new Date(mon); dt.setDate(mon.getDate()+d-1);
-    const list=courses.filter(c=>c.day===d).sort((a,b)=>a.p0-b.p0);
-    html+='<div class="card"><div class="dayh"><b class="'+(d===wd?'today':'')+'">'+WD[d]+(d===wd?' · 今天':'')+'</b><span>'+fmtDate(dt)+' · '+(list.length?list.length+' 门':'无课')+'</span></div>';
+    const list=courses.filter(c=>c.day===d&&activeIn(c,wk)).sort((a,b)=>a.p0-b.p0);
+    html+='<div class="card"><div class="dayh"><b class="'+(d===wd?'today':'')+'">'+WD[d]+(d===wd?' · 今天':'')+'</b><span>'+fmtDate(dt)+' · 第'+wk+'周 · '+(list.length?list.length+' 门':'无课')+'</span></div>';
     html += list.length
       ? list.map(c=>courseHTML(c,{status:d===wd?statusOf(c):null})).join('')
       : '<div class="empty" style="padding:6px 4px">—</div>';
@@ -327,11 +367,13 @@ function renderWeek(){
 
 /* ---------- 渲染：全部课程 ---------- */
 function renderAll(){
-  $('#cnt').textContent='（'+courses.length+' 门）';
+  $('#cnt').textContent='（'+courses.length+' 条 · 第'+curWeek()+'周）';
+  const wk=curWeek();
   const sorted=courses.slice().sort((a,b)=>a.day-b.day||a.p0-b.p0);
   $('#allList').innerHTML = sorted.length
-    ? sorted.map(c=>'<div class="course" data-id="'+c.id+'"><div class="tm"><b>'+esc(WD[c.day])+'</b>'+esc(range(c))+'</div>'+
+    ? sorted.map(c=>'<div class="course'+(activeIn(c,wk)?'':' dim')+'" data-id="'+c.id+'"><div class="tm"><b>'+esc(WD[c.day])+'</b>'+esc(range(c))+'</div>'+
         '<div class="bd"><div class="nm">'+esc(c.name)+'</div><div class="mt"><span>第'+c.p0+(c.p1>c.p0?('–'+c.p1):'')+'节</span>'+
+        '<span>'+esc(weeksText(c))+'</span>'+
         (c.room?'<span>📍 '+esc(c.room)+'</span>':'')+(c.teacher?'<span>👤 '+esc(c.teacher)+'</span>':'')+'</div></div></div>').join('')
     : '<div class="empty">还没有课程，点下面添加</div>';
 
@@ -440,6 +482,19 @@ function toggleTheme(){
 }
 
 /* ---------- 课程编辑 ---------- */
+function parseWeeks(s){
+  const t=String(s||'').replace(/[，、\s]/g,',');
+  if(!t.trim())return [];
+  const out=[];
+  const push=n=>{if(n>=1&&n<=30&&out.indexOf(n)<0)out.push(n);};
+  t.split(',').forEach(seg=>{
+    if(!seg)return;
+    const m=seg.match(/^(\d{1,2})-(\d{1,2})$/);
+    if(m){let a=+m[1],b=+m[2];if(a>b){const x=a;a=b;b=x;}for(let i=a;i<=b;i++)push(i);}
+    else if(/^\d{1,2}$/.test(seg))push(+seg);
+  });
+  return out.sort((a,b)=>a-b);
+}
 function openEdit(c){
   const isNew=!c;
   c=c||{name:'',day:todayIdx(),p0:1,p1:2,room:'',teacher:''};
@@ -452,6 +507,8 @@ function openEdit(c){
     '<div class="f"><label>结束节</label><select id="eP1">'+perOpts(c.p1)+'</select></div></div>'+
     '<div class="row2"><div class="f"><label>教室</label><input id="eRoom" type="text" value="'+esc(c.room)+'"></div>'+
     '<div class="f"><label>老师</label><input id="eTeacher" type="text" value="'+esc(c.teacher)+'"></div></div>'+
+    '<div class="f"><label>周次</label><input id="eWeeks" type="text" value="'+esc((c.weeks||[]).join(','))+' " placeholder="如 3-16 或 3,5,7 或留空=每周"></div>'+
+    '<div class="hint" style="text-align:left;padding:0 2px 4px">周次写成「3-16」表示第 3 到 16 周；留空表示每周都上。</div>'+
     '<div class="actions"><button class="btn" id="eSave">保存</button><button class="btn ghost" id="eCancel">取消</button></div>'+
     (isNew?'':'<div class="actions"><button class="btn danger" id="eDel">删除这门课</button></div>');
   $('#modal').classList.remove('hidden');
@@ -459,8 +516,10 @@ function openEdit(c){
     const nm=$('#eName').value.trim();
     if(!nm){toast('先填课程名');return;}
     const p0=Number($('#eP0').value), p1=Number($('#eP1').value);
+    const weeks=parseWeeks($('#eWeeks').value);
     const obj={id:c.id||('c'+Date.now()+Math.floor(Math.random()*99)),name:nm,day:Number($('#eDay').value),
-      p0:Math.min(p0,p1),p1:Math.max(p0,p1),room:$('#eRoom').value.trim(),teacher:$('#eTeacher').value.trim()};
+      p0:Math.min(p0,p1),p1:Math.max(p0,p1),start:pStart(Math.min(p0,p1)),end:pEnd(Math.max(p0,p1)),
+      room:$('#eRoom').value.trim(),teacher:$('#eTeacher').value.trim(),weeks};
     if(isNew)courses.push(obj);
     else courses=courses.map(x=>x.id===c.id?obj:x);
     save();closeModal();renderAll();renderToday();renderWeek();toast('已保存');
@@ -486,10 +545,10 @@ function buildICS(){
   const start=new Date();start.setHours(0,0,0,0);
   for(let i=0;i<70;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);
-    const wd=d.getDay()||7;
-    for(const c of courses.filter(x=>x.day===wd)){
-      const [sh,sm]=pStart(c.p0).split(':').map(Number);
-      const [eh,em]=pEnd(c.p1).split(':').map(Number);
+    const wd=d.getDay()||7, w=weekOf(d);
+    for(const c of courses.filter(x=>x.day===wd&&activeIn(x,w))){
+      const [sh,sm]=cStart(c).split(':').map(Number);
+      const [eh,em]=cEnd(c).split(':').map(Number);
       const st=new Date(d.getFullYear(),d.getMonth(),d.getDate(),sh,sm);
       const en=new Date(d.getFullYear(),d.getMonth(),d.getDate(),eh,em);
       const f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00Z';
@@ -550,7 +609,9 @@ function initEvents(){
       try{
         const arr=JSON.parse(String(fr.result));
         if(!Array.isArray(arr)||!arr.length)throw 0;
-        courses=arr.map((c,i)=>({id:c.id||('i'+Date.now()+i),name:String(c.name||'课程'),day:Number(c.day)||1,p0:Number(c.p0)||1,p1:Number(c.p1)||Number(c.p0)||1,room:c.room||'',teacher:c.teacher||''}));
+        courses=arr.map((c,i)=>({id:c.id||('i'+Date.now()+i),name:String(c.name||'课程'),day:Number(c.day)||1,p0:Number(c.p0)||1,p1:Number(c.p1)||Number(c.p0)||1,
+          start:c.start||pStart(Number(c.p0)||1),end:c.end||pEnd(Number(c.p1)||Number(c.p0)||1),
+          room:c.room||'',teacher:c.teacher||'',weeks:Array.isArray(c.weeks)?c.weeks:[]}));
         save();renderAll();renderToday();renderWeek();toast('导入成功，共 '+courses.length+' 门课');
       }catch(err){toast('这个文件读不出来');}
     };
