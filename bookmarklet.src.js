@@ -54,11 +54,15 @@ javascript: (async () => {
     for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
     const code = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const url = 'https://aknyl.github.io/kebiao/#s=' + code;
-    try {
-      await navigator.clipboard.writeText(url);
-      alert('已复制，共 ' + arr.length + ' 门课。\n\n回到浏览器地址栏，粘贴打开，会问你要不要导入。');
-    } catch (e) {
-      prompt('先长按全选复制下面这条链接，再粘到浏览器打开：', url);
+    if (confirm('读到 ' + arr.length + ' 门课。\n\n点「确定」：现在打开课表页导入\n点「取消」：只把链接复制到剪贴板')) {
+      location.href = url;
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('链接已复制，粘到浏览器地址栏打开即可导入。');
+      } catch (e) {
+        prompt('长按全选复制下面这条链接：', url);
+      }
     }
   } catch (e) {
     alert('没读到课表：' + (e && e.message ? e.message : e) + '\n\n请先登录教务系统并打开「学生课表」页面，再点这个书签。');
