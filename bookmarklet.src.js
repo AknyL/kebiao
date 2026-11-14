@@ -5,6 +5,9 @@
  */
 javascript: (async () => {
   try {
+    if (!/(^|\.)kxjs\.wmu\.edu\.cn$/i.test(location.hostname)) {
+      throw new Error('这个书签要在教务系统页面点（kxjs.wmu.edu.cn），不能在空白页点');
+    }
     const N = new Date(), Y = N.getFullYear(), M = N.getMonth() + 1;
     const AY = M >= 8 ? Y : Y - 1;
     const u = '/api/schedules/getCouseInfo?startDate=' + AY + '-09-01&endDate=' + (AY + 1) + '-01-31&idszh=';
